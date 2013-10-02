@@ -71,13 +71,15 @@ task main()
 	  } else if(joy2Btn(3)) {
 	  	moveArmTo(10000); //Top
 	  } else {
-	  	motor[lift] = joystick.joy2_y1 / 4.0;
+	  	motor[lift] = joystick.joy2_y1;
 	  }
 
 	  if(joy2Btn(8)) {
 	  	motor[intake] = 100;
 	  } else if(joy2Btn(6)) {
 	  	motor[intake] = -100;
+	  } else {
+	  	motor[intake] = 0;
 	  }
 
 	  if(joy2Btn(9) || joy2Btn(10)) {
