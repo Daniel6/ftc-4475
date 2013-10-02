@@ -62,7 +62,7 @@ task main()
 	  	motor[driveL] = joystick.joy1_y1 / driveDivisor;
 	  	motor[driveR] = joystick.joy1_y2 / driveDivisor;
 	  } else { //Arcade Drive
-	  	motor[driveL] = (joystick.joy1_y1 + joystick.joy2_x2) / driveDivisor;
+	  	motor[driveL] = (joystick.joy1_y1 + joystick.joy1_x2) / driveDivisor;
 	  	motor[driveR] = (joystick.joy1_y1 - joystick.joy1_x2) / driveDivisor;
 	  }
 
