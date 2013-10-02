@@ -23,7 +23,8 @@
 
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
 
-const bool tankDriveEnabled = true;
+const int kUpperLiftLimit = -11000;
+bool tankDriveEnabled = true;
 float driveDivisor = 1.0;
 
 bool moveArmTo(int pos) {
@@ -69,9 +70,28 @@ task main()
 	  if(joy2Btn(2)) {
 	  	moveArmTo(0); //Bottom
 	  } else if(joy2Btn(3)) {
-	  	moveArmTo(10000); //Top
+	  	moveArmTo(-11000); //Top
 	  } else {
-	  	motor[lift] = joystick.joy2_y1;
+	  	nxtDisplayTextLine(2, "encoder: %d", nMotorEncoder[lift]);
+	  	//if(nMotorEncoder[lift] >= 0) {
+	  	//	if(joystick.joy2_y1 < 0) {
+	  	//		motor[lift] = joystick.joy2_y1;
+	  	//	} else {
+	  	//		motor[lift] = 0;
+	  	//	}
+	  	//} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
+	  	//	if(joystick.joy2_y1 > 0) {
+	  	//		motor[lift] = joystick.joy2_y1;
+	  	//	} else {
+	  	//		motor[lift] = 0;
+	  	//	}
+	  	//} else {
+	  		motor[lift] = joystick.joy2_y1;
+	  	//}
+	  }
+
+	  if(joy1Btn(9) && joy1Btn(10)) {
+	  	tankDriveEnabled = !tankDriveEnabled;
 	  }
 
 	  if(joy2Btn(8)) {
