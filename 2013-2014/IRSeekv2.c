@@ -47,8 +47,8 @@ task main()
 void driveToBeacon() {
 	while(dir_left<=8 && dir_right >=2) {
 		readSensors();
-		motor[driveL] = 20 + (S1_left + S2_left + S3_left) / 5;
-		motor[driveR] = 20 + (S4_right + S5_right + S3_right) / 5;
+		motor[driveL] = 40 + (S1_left + S2_left + S3_left) / 5;
+		motor[driveR] = 40 + (S4_right + S5_right + S3_right) / 5;
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
