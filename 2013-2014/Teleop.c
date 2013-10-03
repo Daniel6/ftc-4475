@@ -71,27 +71,30 @@ task main()
 	  	moveArmTo(0); //Bottom
 	  } else if(joy2Btn(3)) {
 	  	moveArmTo(-11000); //Top
+	  } else if(joy2Btn(5)) {
+	  	motor[lift] = joystick.joy2_y1;
 	  } else {
 	  	nxtDisplayTextLine(2, "encoder: %d", nMotorEncoder[lift]);
-	  	//if(nMotorEncoder[lift] >= 0) {
-	  	//	if(joystick.joy2_y1 < 0) {
-	  	//		motor[lift] = joystick.joy2_y1;
-	  	//	} else {
-	  	//		motor[lift] = 0;
-	  	//	}
-	  	//} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
-	  	//	if(joystick.joy2_y1 > 0) {
-	  	//		motor[lift] = joystick.joy2_y1;
-	  	//	} else {
-	  	//		motor[lift] = 0;
-	  	//	}
-	  	//} else {
+	  	if(nMotorEncoder[lift] >= 0) {
+	  		if(joystick.joy2_y1 > 0) {
+	  			motor[lift] = joystick.joy2_y1;
+	  		} else {
+	  			motor[lift] = 20;
+	  		}
+	  	} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
+	  		if(joystick.joy2_y1 < 0) {
+	  			motor[lift] = joystick.joy2_y1;
+	  		} else {
+	  			motor[lift] = -20;
+	  		}
+	  	} else {
 	  		motor[lift] = joystick.joy2_y1;
-	  	//}
+	  	}
 	  }
 
 	  if(joy1Btn(9) && joy1Btn(10)) {
 	  	tankDriveEnabled = !tankDriveEnabled;
+	  	wait10Msec(30);
 	  }
 
 	  if(joy2Btn(8)) {
