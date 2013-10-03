@@ -36,11 +36,12 @@ void driveToBeacon();
 
 task main()
 {
+	nMotorEncoder[lift] = 0;
 	tHTIRS2DSPMode _mode = DSP_1200;
 	startSensors(_mode);
 	waitForStart();
-	driveToBeacon();
 	raiseLift();
+	driveToBeacon();
 	blargLarg();
 }
 
@@ -51,7 +52,7 @@ void blargLarg() {
 }
 
 void raiseLift() {
-	while(nMotorEncoder[lift] > 10500) {
+	while(nMotorEncoder[lift] > -10500) {
 		motor[lift] = 100;
 	}
 	motor[lift] = 0;
@@ -60,8 +61,8 @@ void raiseLift() {
 void driveToBeacon() {
 	while(S3_left + S3_right + S4_left + S2_right < 200) {
 		readSensors();
-		motor[driveL] = 40 + (S1_left + S2_left + S3_left) / 5;
-		motor[driveR] = 40 + (S4_right + S5_right + S3_right) / 5;
+		motor[driveL] = 20 + (S4_left + S5_left);
+		motor[driveR] = 20 + (S1_right + S2_right);
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
