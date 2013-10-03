@@ -36,8 +36,8 @@ void raiseLift();
 void blargLarg();
 void driveToBeacon();
 
-const tMUXSensor irL = msensor_S1_1;
-const tMUXSensor irR = msensor_S1_2;
+const tMUXSensor irL = msensor_S1_2;
+const tMUXSensor irR = msensor_S1_1;
 
 task main()
 {
