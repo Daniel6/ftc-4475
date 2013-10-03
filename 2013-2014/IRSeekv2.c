@@ -2,8 +2,8 @@
 #pragma config(Hubs,  S2, MatrxRbtcs, none,     none,     none)
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
 #pragma config(Sensor, S2,     ,               sensorI2CMuxController)
-#pragma config(Sensor, S3,     irL,            sensorI2CCustom)
-#pragma config(Sensor, S4,     irR,            sensorI2CCustom)
+#pragma config(Sensor, S3,     SMUX,            sensorI2CCustom)
+#pragma config(Sensor, S4,     gyro,            sensorI2CCustom)
 #pragma config(Motor,  motorA,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorB,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorC,           ,             tmotorNXT, openLoop)
@@ -21,7 +21,9 @@
 #pragma config(Servo,  srvo_Matrix_S2_4, servo4,               tServoNone)
 
 #include "JoystickDriver.c"
+#include "hitechnic-sensormux.h"
 #include "hitechnic-irseeker-v2.h"
+
 
 int dir_left = 0;
 int dir_right = 0;
@@ -33,6 +35,9 @@ void readSensors();
 void raiseLift();
 void blargLarg();
 void driveToBeacon();
+
+const tMUXSensor irL = msensor_S1_1;
+const tMUXSensor irR = msensor_S1_2;
 
 task main()
 {
@@ -61,8 +66,8 @@ void raiseLift() {
 void driveToBeacon() {
 	while(S3_left + S3_right + S4_left + S2_right < 200) {
 		readSensors();
-		motor[driveL] = 20 + (S4_left + S5_left);
-		motor[driveR] = 20 + (S1_right + S2_right);
+		motor[driveL] = 20 + 1.0 / ((S4_left + S5_left) / 50.0);
+		motor[driveR] = 20 + 1.0 / ((S1_right + S2_right) / 50.0);
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
@@ -75,16 +80,16 @@ void readSensors() {
 }
 
 void startSensors(tHTIRS2DSPMode mode) {
-	while(true) {
-		PlaySound(soundShortBlip);
-		if(HTIRS2setDSPMode(irL, mode)) {
-			break;
-		}
-	}
-	while(true) {
-		PlaySound(soundShortBlip);
-		if(HTIRS2setDSPMode(irR, mode)) {
-			break;
-		}
-	}
+	//while(true) {
+	//	PlaySound(soundShortBlip);
+	//	if(HTIRS2setDSPMode(irL, mode)) {
+	//		break;
+	//	}
+	//}
+	//while(true) {
+	//	PlaySound(soundShortBlip);
+	//	if(HTIRS2setDSPMode(irR, mode)) {
+	//		break;
+	//	}
+	//}
 }
