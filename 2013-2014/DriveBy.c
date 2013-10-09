@@ -2,8 +2,8 @@
 #pragma config(Hubs,  S2, MatrxRbtcs, none,     none,     none)
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
 #pragma config(Sensor, S2,     ,               sensorI2CMuxController)
-#pragma config(Sensor, S3,     SMUX,           sensorI2CCustom)
-#pragma config(Sensor, S4,     gyro,           sensorI2CCustom)
+#pragma config(Sensor, S3,     irL,           sensorI2CCustom)
+#pragma config(Sensor, S4,     irR,           sensorI2CCustom)
 #pragma config(Motor,  motorA,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorB,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorC,           ,             tmotorNXT, openLoop)
@@ -41,8 +41,8 @@ int S1_right, S2_right, S3_right, S4_right, S5_right = 0;
 
 tHTIRS2DSPMode _mode = DSP_1200;
 
-const tMUXSensor irL = msensor_S1_2;
-const tMUXSensor irR = msensor_S1_1;
+//const tMUXSensor irL = msensor_S1_2;
+//const tMUXSensor irR = msensor_S1_1;
 //-----------------------------------------Encoder / Other constants
 const int sensorTrigger = 70;
 const int encoderTurnAmount = 5000;
@@ -109,9 +109,9 @@ void turnOntoRamp() {
 void driveBy() {
 	while(S3_left < sensorTrigger && S3_right < sensorTrigger) { //Drive forwards until detect beacon to left or right
 		if(leftSide) {
-			motor[driveL] = motor[driveR] = 100;
+			motor[driveL] = motor[driveR] = 20;
 		} else {
-			motor[driveL] = motor[driveR] = -100;
+			motor[driveL] = motor[driveR] = -20;
 		}
   	readSensors();
 	}
@@ -132,7 +132,7 @@ void driveToEnd() {
 void dumpBrick() {
 	servo[autoArm] = 255;
 	wait10Msec(1000);
-	servo[autoArm] = 0;
+	servo[autoArm] = 10;
 }
 
 void readSensors() {
@@ -143,16 +143,16 @@ void readSensors() {
 }
 
 void startSensors(tHTIRS2DSPMode mode) {
-	//while(true) {
-	//	PlaySound(soundShortBlip);
-	//	if(HTIRS2setDSPMode(irL, mode)) {
-	//		break;
-	//	}
-	//}
-	//while(true) {
-	//	PlaySound(soundShortBlip);
-	//	if(HTIRS2setDSPMode(irR, mode)) {
-	//		break;
-	//	}
-	//}
+	while(true) {
+		PlaySound(soundShortBlip);
+		if(HTIRS2setDSPMode(irL, mode)) {
+			break;
+		}
+	}
+	while(true) {
+		PlaySound(soundShortBlip);
+		if(HTIRS2setDSPMode(irR, mode)) {
+			break;
+		}
+	}
 }

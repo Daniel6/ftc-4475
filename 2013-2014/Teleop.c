@@ -105,7 +105,7 @@ task main()
 	  	motor[intake] = 0;
 	  }
 
-	  if(joy2Btn(9) || joy2Btn(10)) {
+	  if(joy2Btn(9) && joy2Btn(10)) {
 	  	nMotorEncoder[lift] = 0;
 	  }
   }
