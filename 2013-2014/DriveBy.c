@@ -131,7 +131,7 @@ void driveToEnd() {
 
 void dumpBrick() {
 	servo[autoArm] = 255;
-	wait10Msec(1000);
+	wait10Msec(100);
 	servo[autoArm] = 10;
 }
 
