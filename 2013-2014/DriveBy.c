@@ -3,7 +3,6 @@
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
 #pragma config(Sensor, S2,     ,               sensorI2CMuxController)
 #pragma config(Sensor, S3,     irL,           sensorI2CCustom)
-#pragma config(Sensor, S4,     irR,           sensorI2CCustom)
 #pragma config(Motor,  motorA,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorB,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorC,           ,             tmotorNXT, openLoop)
@@ -35,9 +34,9 @@ void selectMode();
 
 bool leftSide;
 int dir_left = 0;
-int dir_right = 0;
+//int dir_right = 0;
 int S1_left, S2_left, S3_left, S4_left, S5_left = 0;
-int S1_right, S2_right, S3_right, S4_right, S5_right = 0;
+//int S1_right, S2_right, S3_right, S4_right, S5_right = 0;
 
 tHTIRS2DSPMode _mode = DSP_1200;
 
@@ -107,7 +106,7 @@ void turnOntoRamp() {
 }
 
 void driveBy() {
-	while(S3_left < sensorTrigger && S3_right < sensorTrigger) { //Drive forwards until detect beacon to left or right
+	while(S3_left < sensorTrigger) { //Drive forwards until detect beacon to left or right
 		if(leftSide) {
 			motor[driveL] = motor[driveR] = 20;
 		} else {
@@ -137,9 +136,9 @@ void dumpBrick() {
 
 void readSensors() {
 	dir_left = HTIRS2readACDir(irL);
-	dir_right = HTIRS2readACDir(irR);
+	//dir_right = HTIRS2readACDir(irR);
 	HTIRS2readAllDCStrength(irL, S1_left, S2_left, S3_left, S4_left, S5_left);
-	HTIRS2readAllDCStrength(irR, S1_right, S2_right, S3_right, S4_right, S5_right);
+	//HTIRS2readAllDCStrength(irR, S1_right, S2_right, S3_right, S4_right, S5_right);
 }
 
 void startSensors(tHTIRS2DSPMode mode) {
@@ -149,10 +148,10 @@ void startSensors(tHTIRS2DSPMode mode) {
 			break;
 		}
 	}
-	while(true) {
-		PlaySound(soundShortBlip);
-		if(HTIRS2setDSPMode(irR, mode)) {
-			break;
-		}
-	}
+	//while(true) {
+	//	PlaySound(soundShortBlip);
+	//	if(HTIRS2setDSPMode(irR, mode)) {
+	//		break;
+	//	}
+	//}
 }
