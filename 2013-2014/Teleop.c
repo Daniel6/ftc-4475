@@ -52,6 +52,10 @@ task main()
 
   while (true)
   {
+
+  	while(joy1Btn(2) || joy2Btn(10)) { //Freeze robot in case of bad thing(s)
+  	}
+
   	//Control power ratios for drive train
   	if(joy1Btn(8)) {
 	  		driveDivisor = 4.0;
@@ -74,7 +78,6 @@ task main()
 	  } else if(joy2Btn(5)) {
 	  	motor[lift] = joystick.joy2_y1;
 	  } else {
-	  	nxtDisplayTextLine(2, "encoder: %d", nMotorEncoder[lift]);
 	  	if(nMotorEncoder[lift] >= 0) {
 	  		if(joystick.joy2_y1 > 0) {
 	  			motor[lift] = joystick.joy2_y1;

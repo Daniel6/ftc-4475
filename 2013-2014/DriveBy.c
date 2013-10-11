@@ -80,6 +80,7 @@ void selectMode() {
 	}
 	eraseDisplay();
 	nxtDisplayCenteredBigTextLine(1, "DONE");
+	nxtDisplayCenteredBigTextLine(2, ";)");
 }
 
 void turnOntoRamp() {
@@ -106,11 +107,11 @@ void turnOntoRamp() {
 }
 
 void driveBy() {
-	while(S3_left < sensorTrigger) { //Drive forwards until detect beacon to left or right
+	while(S3_left < sensorTrigger) { //Drive forwards until detect beacon to left
 		if(leftSide) {
-			motor[driveL] = motor[driveR] = 20;
+			motor[driveL] = motor[driveR] = 40;
 		} else {
-			motor[driveL] = motor[driveR] = -20;
+			motor[driveL] = motor[driveR] = -40;
 		}
   	readSensors();
 	}
