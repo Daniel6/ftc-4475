@@ -89,9 +89,9 @@ task main()
 		}
 		if(!isBraking) { //If we are braking the lift, don't move anything
 			if(joy2Btn(2)) {
-				moveArmTo(0); //Bottom
+				//moveArmTo(0); //Bottom
 			} else if(joy2Btn(3)) {
-				moveArmTo(-11000); //Top
+				//moveArmTo(-11000); //Top
 			} else if(joy2Btn(5)) {
 				motor[lift] = joystick.joy2_y1;
 			} else {
