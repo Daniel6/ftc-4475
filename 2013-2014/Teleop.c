@@ -81,15 +81,15 @@ task main()
 		} else if(joy2Btn(5)) {
 				motor[lift] = -joystick.joy2_y1;
 		} else {
-			if(nMotorEncoder[lift] <= 0) {
+			if(nMotorEncoder[lift] >= 0) {
 				if(joystick.joy2_y1 < 0) {
-					motor[lift] = joystick.joy2_y1;
+					motor[lift] = -joystick.joy2_y1;
 				} else {
 					motor[lift] = -10;
 				}
 			} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
 				if(joystick.joy2_y1 > 0) {
-					motor[lift] = joystick.joy2_y1;
+					motor[lift] = -joystick.joy2_y1;
 				} else {
 					motor[lift] = 10;
 				}
