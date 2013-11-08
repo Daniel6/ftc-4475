@@ -22,8 +22,6 @@
 
 const int kUpperLiftLimit = -7760;
 bool tankDriveEnabled = true;
-bool isBraking = false;
-bool bounce = false;
 float driveDivisor = 1.0;
 
 bool moveArmTo(int pos) {
