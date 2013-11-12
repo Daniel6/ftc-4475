@@ -83,7 +83,7 @@ task main()
 				if(joystick.joy2_y1 < 0) {
 					motor[lift] = -joystick.joy2_y1;
 				} else {
-					motor[lift] = -10;
+					motor[lift] = 0;
 				}
 			} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
 				if(joystick.joy2_y1 > 0) {
