@@ -20,7 +20,7 @@
 
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
 
-const int kUpperLiftLimit = -7760;
+const int kUpperLiftLimit = -8200;
 bool tankDriveEnabled = true;
 float driveDivisor = 1.0;
 
@@ -89,7 +89,7 @@ task main()
 				if(joystick.joy2_y1 > 0) {
 					motor[lift] = -joystick.joy2_y1;
 				} else {
-					motor[lift] = 10;
+					motor[lift] = 0;
 				}
 			} else {
 				motor[lift] = -joystick.joy2_y1;
