@@ -1,3 +1,4 @@
+
 #pragma config(Hubs,  S1, HTServo,  HTMotor,  HTMotor,  HTMotor)
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
 #pragma config(Sensor, S3,     irL,            sensorI2CCustom)
@@ -20,9 +21,11 @@
 
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
 
-const int kUpperLiftLimit = -8200;
+const int kUpperLiftLimit = -10000;
 bool tankDriveEnabled = true;
 float driveDivisor = 1.0;
+
+void manualControlLift();
 
 bool moveArmTo(int pos) {
 	if(abs(pos - nMotorEncoder[lift]) < 50) {
@@ -58,7 +61,7 @@ task main()
 	nxtDisplayString(2, "Lift %d", nMotorEncoder[lift]);
 
 		//Control power ratios for drive train
-		if(joy1Btn(8)) {
+		if(joy1Btn(8) || joy1Btn(6)) {
 			driveDivisor = 4.0;
 		} else {
 			driveDivisor = 1.0;
@@ -72,27 +75,27 @@ task main()
 			motor[driveR] = (joystick.joy1_y1 - joystick.joy1_x2) / driveDivisor;
 		}
 
-		if(joy2Btn(2)) {
+		if(joy2Btn(1)) {
 				//moveArmTo(0); //Bottom
-		} else if(joy2Btn(3)) {
+		} else if(joy2Btn(2)) {
 				//moveArmTo(-11000); //Top
-		} else if(joy2Btn(5)) {
-				motor[lift] = -joystick.joy2_y1;
+		} else if(joy2Btn(3)) {
+				manualControlLift();
 		} else {
 			if(nMotorEncoder[lift] >= 0) {
 				if(joystick.joy2_y1 < 0) {
-					motor[lift] = -joystick.joy2_y1;
+					manualControlLift();
 				} else {
 					motor[lift] = 0;
 				}
 			} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
 				if(joystick.joy2_y1 > 0) {
-					motor[lift] = -joystick.joy2_y1;
+					manualControlLift();
 				} else {
 					motor[lift] = 0;
 				}
 			} else {
-				motor[lift] = -joystick.joy2_y1;
+				manualControlLift();
 			}
 		}
 
@@ -101,9 +104,9 @@ task main()
 			wait10Msec(30);
 		}
 
-		if(joy2Btn(8)) {
+		if(joy2Btn(6)) {
 			motor[intake] = 100;
-		} else if(joy2Btn(6)) {
+		} else if(joy2Btn(8)) {
 			motor[intake] = -100;
 		} else {
 			motor[intake] = 0;
@@ -112,5 +115,17 @@ task main()
 		if(joy2Btn(9) && joy2Btn(10)) {
 			nMotorEncoder[lift] = 0;
 		}
+	}
+}
+
+void manualControlLift() {
+	if(joy2Btn(5) || joy2Btn(7)) {
+		if(joy2Btn(5) && joy2Btn(7)) {
+			motor[lift] = -joystick.joy2_y1 / 8.0;
+		} else {
+			motor[lift] = -joystick.joy2_y1 / 4.0;
+		}
+	} else {
+		motor[lift] = -joystick.joy2_y1;
 	}
 }
