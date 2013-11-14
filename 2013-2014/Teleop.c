@@ -20,7 +20,7 @@
 
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
 
-const int kUpperLiftLimit = -10000;
+const int kUpperLiftLimit = -9000;
 bool tankDriveEnabled = true;
 float driveDivisor = 1.0;
 
@@ -59,6 +59,12 @@ task main()
 	eraseDisplay();
 	nxtDisplayString(2, "Lift %d", nMotorEncoder[lift]);
 
+		if(joy1Btn(3)) {
+			motor[spinner] = 100;
+		} else {
+			motor[spinner] = 0;
+		}
+
 		//Control power ratios for drive train
 		if(joy1Btn(8) || joy1Btn(6)) {
 			driveDivisor = 4.0;
@@ -82,13 +88,13 @@ task main()
 				manualControlLift();
 		} else {
 			if(nMotorEncoder[lift] >= 0) {
-				if(joystick.joy2_y1 < 0) {
+				if(joystick.joy2_y1 > 0) {
 					manualControlLift();
 				} else {
 					motor[lift] = 0;
 				}
 			} else if(nMotorEncoder[lift] <= kUpperLiftLimit) {
-				if(joystick.joy2_y1 > 0) {
+				if(joystick.joy2_y1 < 0) {
 					manualControlLift();
 				} else {
 					motor[lift] = 0;
