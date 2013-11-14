@@ -9,7 +9,7 @@
 #pragma config(Motor,  mtr_S1_C3_1,     lift,          tmotorTetrix, openLoop)
 #pragma config(Motor,  mtr_S1_C3_2,     motorG,        tmotorTetrix, openLoop)
 #pragma config(Motor,  mtr_S1_C4_1,     intake,        tmotorTetrix, openLoop)
-#pragma config(Motor,  mtr_S1_C4_2,     motorI,        tmotorTetrix, openLoop)
+#pragma config(Motor,  mtr_S1_C4_2,     spinner,       tmotorTetrix, openLoop)
 #pragma config(Servo,  srvo_S1_C1_1,    autoArm,              tServoStandard)
 #pragma config(Servo,  srvo_S1_C1_2,    servo2,               tServoNone)
 #pragma config(Servo,  srvo_S1_C1_3,    liftR,                tServoStandard)
@@ -42,9 +42,9 @@ tHTIRS2DSPMode _mode = DSP_1200;
 //const tMUXSensor irR = msensor_S1_1;
 //-----------------------------------------Encoder / Other constants
 const int sensorTrigger = 70;
-const int encoderTurnAmount = 5000;
-const int driveLength = 10000;
-const int encoderRampDistance = 4000;
+const int encoderTurnAmount = 4600;
+const int driveLength = 3700;
+const int encoderRampDistance = 2000;
 //------------------------------------------------------------------
 
 task main()
@@ -84,28 +84,41 @@ void selectMode() {
 void turnOntoRamp() {
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
+	wait1Msec(1000);
 	if(leftSide) {
 		while(abs(nMotorEncoder[driveR]) <= encoderTurnAmount) {
-			motor[driveL] = 20;
-			motor[driveR] = 100;
+			if(abs(nMotorEncoder[driveR]) < encoderTurnAmount / 4.0) {
+				motor[driveL] = 5;
+				motor[driveR] = 100;
+			} else {
+				motor[driveL] = 0;
+				motor[driveR] = 100;
+			}
 		}
 		motor[driveL] = motor[driveR] = 0;
 	} else {
 		while(abs(nMotorEncoder[driveL]) <= encoderTurnAmount) {
-			motor[driveL] = 100;
-			motor[driveR] = 20;
-		}
-		nMotorEncoder[driveL] = 0;
-		nMotorEncoder[driveR] = 0;
-		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 < encoderRampDistance) {
-			motor[driveL] = motor[driveR] = 80;
+			if(abs(nMotorEncoder[driveL]) < encoderTurnAmount / 4.0) {
+				motor[driveR] = 5;
+				motor[driveL] = 100;
+			} else {
+				motor[driveR] = 0;
+				motor[driveL] = 100;
+			}
 		}
 		motor[driveL] = motor[driveR] = 0;
 	}
+	nMotorEncoder[driveL] = 0;
+	nMotorEncoder[driveR] = 0;
+	wait1Msec(1000);
+	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 < encoderRampDistance) {
+		motor[driveL] = motor[driveR] = 80;
+	}
+	motor[driveL] = motor[driveR] = 0;
 }
 
 void driveBy() {
-	while(S3_left < sensorTrigger) { //Drive forwards until detect beacon to left
+	while(S3_left < sensorTrigger && (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive forwards until detect beacon to left
 		if(leftSide) {
 			motor[driveL] = motor[driveR] = 40;
 		} else {

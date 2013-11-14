@@ -1,4 +1,3 @@
-
 #pragma config(Hubs,  S1, HTServo,  HTMotor,  HTMotor,  HTMotor)
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
 #pragma config(Sensor, S3,     irL,            sensorI2CCustom)
@@ -10,7 +9,7 @@
 #pragma config(Motor,  mtr_S1_C3_1,     lift,          tmotorTetrix, openLoop)
 #pragma config(Motor,  mtr_S1_C3_2,     motorG,        tmotorTetrix, openLoop)
 #pragma config(Motor,  mtr_S1_C4_1,     intake,        tmotorTetrix, openLoop)
-#pragma config(Motor,  mtr_S1_C4_2,     motorI,        tmotorTetrix, openLoop)
+#pragma config(Motor,  mtr_S1_C4_2,     spinner,       tmotorTetrix, openLoop)
 #pragma config(Servo,  srvo_S1_C1_1,    autoArm,              tServoStandard)
 #pragma config(Servo,  srvo_S1_C1_2,    servo2,               tServoNone)
 #pragma config(Servo,  srvo_S1_C1_3,    liftR,                tServoStandard)
