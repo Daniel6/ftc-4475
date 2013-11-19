@@ -31,6 +31,7 @@ void turnOntoRamp();
 void selectMode();
 
 bool leftSide;
+bool retraceSteps;
 int dir_left = 0;
 //int dir_right = 0;
 int S1_left, S2_left, S3_left, S4_left, S5_left = 0;
@@ -44,6 +45,7 @@ tHTIRS2DSPMode _mode = DSP_1200;
 const int sensorTrigger = 70;
 const int encoderTurnAmount = 4600;
 const int driveLength = 3700;
+const int reversedDriveLength = 200;
 const int encoderRampDistance = 2000;
 //------------------------------------------------------------------
 
@@ -77,6 +79,20 @@ void selectMode() {
 		}
 	}
 	eraseDisplay();
+	wait1Msec(500);
+	nxtDisplayCenteredTextLine(0, "Do you want to");
+	nxtDisplayCenteredTextLine(1, "retrace your steps?");
+	while(nNxtButtonPressed != 3) {
+		if(nNxtButtonPressed == 1) { //Right arrow
+			retraceSteps = true;
+			nxtDisplayCenteredBigTextLine(3, "YES");
+		}
+		if(nNxtButtonPressed == 2) { //Left arrow
+			retraceSteps = false;
+			nxtDisplayCenteredBigTextLine(3, "NO");
+		}
+	}
+	eraseDisplay();
 	nxtDisplayCenteredBigTextLine(1, "DONE");
 	nxtDisplayCenteredBigTextLine(2, ";)");
 }
@@ -88,22 +104,42 @@ void turnOntoRamp() {
 	if(leftSide) {
 		while(abs(nMotorEncoder[driveR]) <= encoderTurnAmount) {
 			if(abs(nMotorEncoder[driveR]) < encoderTurnAmount / 4.0) {
-				motor[driveL] = 5;
-				motor[driveR] = 100;
+				if(retraceSteps) {
+					motor[driveL] = -5;
+					motor[driveR] = -100;
+				} else {
+					motor[driveL] = 5;
+					motor[driveR] = 100;
+				}
 			} else {
-				motor[driveL] = 0;
-				motor[driveR] = 100;
+				if(retraceSteps) {
+					motor[driveL] = 0;
+					motor[driveR] = -100;
+				} else {
+					motor[driveL] = 0;
+					motor[driveR] = 100;
+				}
 			}
 		}
 		motor[driveL] = motor[driveR] = 0;
 	} else {
 		while(abs(nMotorEncoder[driveL]) <= encoderTurnAmount) {
 			if(abs(nMotorEncoder[driveL]) < encoderTurnAmount / 4.0) {
-				motor[driveR] = 5;
-				motor[driveL] = 100;
+				if(retraceSteps) {
+					motor[driveR] = -5;
+					motor[driveL] = -100;
+				} else {
+					motor[driveR] = 5;
+					motor[driveL] = 100;
+				}
 			} else {
-				motor[driveR] = 0;
-				motor[driveL] = 100;
+				if(retraceSteps) {
+					motor[driveR] = 0;
+					motor[driveL] = -100;
+				} else {
+					motor[driveR] = 0;
+					motor[driveL] = 100;
+				}
 			}
 		}
 		motor[driveL] = motor[driveR] = 0;
@@ -112,7 +148,11 @@ void turnOntoRamp() {
 	nMotorEncoder[driveR] = 0;
 	wait1Msec(1000);
 	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 < encoderRampDistance) {
-		motor[driveL] = motor[driveR] = 80;
+		if(retraceSteps) {
+			motor[driveL] = motor[driveR] = -80;
+		} else {
+			motor[driveL] = motor[driveR] = 80;
+		}
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
@@ -130,11 +170,21 @@ void driveBy() {
 }
 
 void driveToEnd() {
-	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive to end of wall
-		if(leftSide) {
-			motor[driveL] = motor[driveR] = 100;
-		} else {
-			motor[driveL] = motor[driveR] = -100;
+	if(!retraceSteps) {
+		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive to end of wall
+			if(leftSide) {
+				motor[driveL] = motor[driveR] = 100;
+			} else {
+				motor[driveL] = motor[driveR] = -100;
+			}
+		}
+	} else {
+		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 >= reversedDriveLength) { //Drive backwards
+			if(leftSide) {
+				motor[driveL] = motor[driveR] = -100;
+			} else {
+				motor[driveL] = motor[driveR] = 100;
+			}
 		}
 	}
 	motor[driveL] = motor[driveR] = 0;
