@@ -44,9 +44,13 @@ tHTIRS2DSPMode _mode = DSP_1200;
 //-----------------------------------------Encoder / Other constants
 const int sensorTrigger = 70;
 const int encoderTurnAmount = 4600;
-const int driveLength = 3700;
+const int initialTurnAmount = encoderTurnAmount / 4.0; //How long the initial phase of turning is
+const int driveLength = 3300;
 const int reversedDriveLength = 200;
 const int encoderRampDistance = 2000;
+const int slowDrive = 5; //Value for the inside motor when turning onto ramp during initial phase
+const int fastDrive = 100; //Value for the outside motor when turning onto ramp during initial phase
+const int reverseDrive = -10;
 //------------------------------------------------------------------
 
 task main()
@@ -57,6 +61,9 @@ task main()
 	startSensors(_mode);
 	selectMode();
   waitForStart(); // Wait for the beginning of autonomous phase.
+  motor[lift] = -30;
+  wait1Msec(800);
+  motor[lift] = 0;
   driveBy();
 	dumpBrick();
 	driveToEnd();
@@ -103,42 +110,42 @@ void turnOntoRamp() {
 	wait1Msec(1000);
 	if(leftSide) {
 		while(abs(nMotorEncoder[driveR]) <= encoderTurnAmount) {
-			if(abs(nMotorEncoder[driveR]) < encoderTurnAmount / 4.0) {
+			if(abs(nMotorEncoder[driveR]) < initialTurnAmount) {
 				if(retraceSteps) {
-					motor[driveL] = -5;
-					motor[driveR] = -100;
+					motor[driveL] = -slowDrive;
+					motor[driveR] = -fastDrive;
 				} else {
-					motor[driveL] = 5;
-					motor[driveR] = 100;
+					motor[driveL] = slowDrive;
+					motor[driveR] = fastDrive;
 				}
 			} else {
 				if(retraceSteps) {
-					motor[driveL] = 0;
-					motor[driveR] = -100;
+					motor[driveL] = reverseDrive;
+					motor[driveR] = -fastDrive;
 				} else {
-					motor[driveL] = 0;
-					motor[driveR] = 100;
+					motor[driveL] = -reverseDrive;
+					motor[driveR] = fastDrive;
 				}
 			}
 		}
 		motor[driveL] = motor[driveR] = 0;
 	} else {
 		while(abs(nMotorEncoder[driveL]) <= encoderTurnAmount) {
-			if(abs(nMotorEncoder[driveL]) < encoderTurnAmount / 4.0) {
+			if(abs(nMotorEncoder[driveL]) < initialTurnAmount) {
 				if(retraceSteps) {
-					motor[driveR] = -5;
-					motor[driveL] = -100;
+					motor[driveR] = -slowDrive;
+					motor[driveL] = -fastDrive;
 				} else {
-					motor[driveR] = 5;
-					motor[driveL] = 100;
+					motor[driveR] = slowDrive;
+					motor[driveL] = fastDrive;
 				}
 			} else {
 				if(retraceSteps) {
-					motor[driveR] = 0;
-					motor[driveL] = -100;
+					motor[driveR] = reverseDrive;
+					motor[driveL] = -fastDrive;
 				} else {
-					motor[driveR] = 0;
-					motor[driveL] = 100;
+					motor[driveR] = -reverseDrive;
+					motor[driveL] = fastDrive;
 				}
 			}
 		}

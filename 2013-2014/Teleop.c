@@ -46,8 +46,7 @@ void initializeRobot()
 	return;
 }
 
-task main()
-{
+task main() {
 	initializeRobot();
 	waitForStart();   // wait for start of tele-op phase
 	servo[liftL] = 0;
@@ -66,7 +65,9 @@ task main()
 		}
 
 		//Control power ratios for drive train
-		if(joy1Btn(8) || joy1Btn(6)) {
+		if(joy1Btn(8)) {
+			driveDivisor = 8.0;
+		} else if(joy1Btn(6)) {
 			driveDivisor = 4.0;
 		} else {
 			driveDivisor = 1.0;
@@ -111,6 +112,8 @@ task main()
 
 		if(joy2Btn(6)) {
 			motor[intake] = 100;
+		} else if(joy2Btn(7)) {
+			motor[intake] = -30;
 		} else if(joy2Btn(8)) {
 			motor[intake] = -100;
 		} else {
