@@ -65,10 +65,8 @@ task main() {
 		}
 
 		//Control power ratios for drive train
-		if(joy1Btn(8)) {
-			driveDivisor = 8.0;
-		} else if(joy1Btn(6)) {
-			driveDivisor = 4.0;
+		if(joy1Btn(6)) {
+			driveDivisor = 3.0;
 		} else {
 			driveDivisor = 1.0;
 		}

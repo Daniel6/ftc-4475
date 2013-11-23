@@ -41,7 +41,7 @@ int dir_left = 0;
 int S1_left, S2_left, S3_left, S4_left, S5_left = 0;
 //int S1_right, S2_right, S3_right, S4_right, S5_right = 0;
 
-//tHTIRS2DSPMode _mode = DSP_1200;
+tHTIRS2DSPMode _mode = DSP_1200;
 
 //const tMUXSensor irL = msensor_S1_2;
 //const tMUXSensor irR = msensor_S1_1;
@@ -53,9 +53,9 @@ float turnPower;
 const int sensorTrigger = 70;
 const int encoderTurnAmount = 4600;
 const int initialTurnAmount = encoderTurnAmount / 4.0; //How long the initial phase of turning is
-const int driveLength = 3300;
+const int driveLength = 4600;
 const int reversedDriveLength = 200;
-const int encoderRampDistance = 2000;
+const int encoderRampDistance = 1800;
 const int slowDrive = 5; //Value for the inside motor when turning onto ramp during initial phase
 const int fastDrive = 100; //Value for the outside motor when turning onto ramp during initial phase
 const int reverseDrive = -10;
@@ -77,18 +77,19 @@ task readGyro() {
 task main()
 {
 	disableDiagnosticsDisplay();
+	heading = 0.0;
 	StartTask(readGyro);
-	//nMotorEncoder[driveL] = 0;
-	//nMotorEncoder[driveR] = 0;
-	//startSensors(_mode);
+	nMotorEncoder[driveL] = 0;
+	nMotorEncoder[driveR] = 0;
+	startSensors(_mode);
 
-	//selectMode();
+	selectMode();
   waitForStart(); // Wait for the beginning of autonomous phase.
   HTGYROstartCal(gyro);
   initialHeading = heading;
-  motor[lift] = -30;
-  wait1Msec(800);
-  motor[lift] = 0;
+ // motor[lift] = -30;
+ // wait1Msec(800);
+ // motor[lift] = 0;
   driveBy();
 	dumpBrick();
 	driveToEnd();
@@ -97,10 +98,15 @@ task main()
 }
 
 void turnDegrees(int deg) {
-	error = abs(heading - deg);
-	while(error > 5) {
-		error = abs(heading - deg); //(-) means you are too far left
-		turnPower = BOUND((int)(0.5*error), -100, 100);
+	heading = 0;
+	error = heading - deg;
+	while(error > 5 || error < -5) {
+		error = heading - deg; //(-) means you are too far left
+		//turnPower = BOUND((int)(error), -100, 100);
+		turnPower = 40 * (error/abs(error));
+		if(leftSide && !retraceSteps) {
+			turnPower = 60 * (error/abs(error));
+		}
 		motor[driveL] = -turnPower;
 		motor[driveR] = turnPower;
 	}
@@ -158,23 +164,23 @@ void turnOntoRamp() {
 	wait1Msec(1000);
 	if(leftSide) {
 		if(retraceSteps) {
+			turnDegrees(-100);
+			driveForwards(700);
 			turnDegrees(-90);
-			driveForwards(600);
-			turnDegrees(90);
 		} else {
-			turnDegrees(-90);
-			driveForwards(600);
-			turnDegrees(-90);
+			turnDegrees(-55);
+			driveForwards(700);
+			turnDegrees(55);
 		}
 	} else {
 		if(retraceSteps) {
-			turnDegrees(-90);
-			driveForwards(600);
-			turnDegrees(-90);
-		} else {
-			turnDegrees(-90);
-			driveForwards(600);
+			turnDegrees(-100);
+			driveForwards(700);
 			turnDegrees(90);
+		} else {
+			turnDegrees(-100);
+			driveForwards(700);
+			turnDegrees(-90);
 		}
 	}
 
@@ -229,41 +235,51 @@ void turnOntoRamp() {
 	wait1Msec(1000);
 	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 < encoderRampDistance) {
 		if(retraceSteps) {
-			motor[driveL] = motor[driveR] = -80;
-		} else {
 			motor[driveL] = motor[driveR] = 80;
+		} else {
+			motor[driveL] = motor[driveR] = -80;
 		}
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
 
 void driveBy() {
-	while(S3_left < sensorTrigger && (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive forwards until detect beacon to left
-		if(leftSide) {
+	if(leftSide) {
+		while(S3_left < sensorTrigger && (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength - 500) { //Drive forwards until detect beacon to left
 			motor[driveL] = motor[driveR] = 40;
-		} else {
-			motor[driveL] = motor[driveR] = -40;
+  		readSensors();
 		}
-  	readSensors();
+	} else {
+		while(S3_left < sensorTrigger && (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) {
+  		motor[driveL] = motor[driveR] = -23;
+  		readSensors();
+		}
+
+		int setpoint = (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2;
+		while((abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 > setpoint - 40) {
+			motor[driveL] = motor[driveR] = 18;
+		}
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
 
 void driveToEnd() {
 	if(!retraceSteps) {
-		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive to end of wall
-			if(leftSide) {
-				motor[driveL] = motor[driveR] = 100;
-			} else {
-				motor[driveL] = motor[driveR] = -100;
+		if(leftSide) {
+			while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength - 500) { //Drive to end of wall
+				motor[driveL] = motor[driveR] = 25;
+			}
+		} else {
+			while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive to end of wall
+				motor[driveL] = motor[driveR] = -25;
 			}
 		}
 	} else {
 		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 >= reversedDriveLength) { //Drive backwards
 			if(leftSide) {
-				motor[driveL] = motor[driveR] = -100;
+				motor[driveL] = motor[driveR] = -25;
 			} else {
-				motor[driveL] = motor[driveR] = 100;
+				motor[driveL] = motor[driveR] = 25;
 			}
 		}
 	}
@@ -274,6 +290,7 @@ void dumpBrick() {
 	servo[autoArm] = 255;
 	wait10Msec(100);
 	servo[autoArm] = 10;
+	wait10Msec(100);
 }
 
 void readSensors() {
