@@ -1,5 +1,5 @@
 #pragma config(Hubs,  S1, HTServo,  HTMotor,  HTMotor,  HTMotor)
-#pragma config(Sensor, S1,     ,               sensorI2CMuxController)
+#pragma config(Sensor, S2,     gyro,           sensorI2CHiTechnicGyro)
 #pragma config(Sensor, S3,     irL,            sensorI2CCustom)
 #pragma config(Motor,  motorA,           ,             tmotorNXT, openLoop)
 #pragma config(Motor,  motorB,           ,             tmotorNXT, openLoop)
@@ -21,7 +21,11 @@
 #include "JoystickDriver.c"
 #include "hitechnic-sensormux.h"
 #include "hitechnic-irseeker-v2.h"
+#include "hitechnic-gyro.h"
 
+#define BOUND(n, l, h) (((n) < (l))? (l): ((n) > (h))? (h): (n))
+
+void turnDegrees(int deg);
 void readSensors();
 void startSensors(tHTIRS2DSPMode mode);
 void dumpBrick();
@@ -37,10 +41,14 @@ int dir_left = 0;
 int S1_left, S2_left, S3_left, S4_left, S5_left = 0;
 //int S1_right, S2_right, S3_right, S4_right, S5_right = 0;
 
-tHTIRS2DSPMode _mode = DSP_1200;
+//tHTIRS2DSPMode _mode = DSP_1200;
 
 //const tMUXSensor irL = msensor_S1_2;
 //const tMUXSensor irR = msensor_S1_1;
+float heading = 0.0;
+float initialHeading = 0.0;
+float error;
+float turnPower;
 //-----------------------------------------Encoder / Other constants
 const int sensorTrigger = 70;
 const int encoderTurnAmount = 4600;
@@ -53,14 +61,31 @@ const int fastDrive = 100; //Value for the outside motor when turning onto ramp 
 const int reverseDrive = -10;
 //------------------------------------------------------------------
 
+task readGyro() {
+	time1[T1] = 0;
+	while(true) {
+		while (time1[T1] < 20) {
+  		wait1Msec(1);
+  	}
+  	time1[T1] = 0;
+
+  	heading += HTGYROreadRot(gyro) * 0.02;
+	}
+}
+
+//--------------------------------MAIN TASK--------------------------------------------------------------
 task main()
 {
 	disableDiagnosticsDisplay();
-	nMotorEncoder[driveL] = 0;
-	nMotorEncoder[driveR] = 0;
-	startSensors(_mode);
-	selectMode();
+	StartTask(readGyro);
+	//nMotorEncoder[driveL] = 0;
+	//nMotorEncoder[driveR] = 0;
+	//startSensors(_mode);
+
+	//selectMode();
   waitForStart(); // Wait for the beginning of autonomous phase.
+  HTGYROstartCal(gyro);
+  initialHeading = heading;
   motor[lift] = -30;
   wait1Msec(800);
   motor[lift] = 0;
@@ -69,6 +94,17 @@ task main()
 	driveToEnd();
 	turnOntoRamp();
 
+}
+
+void turnDegrees(int deg) {
+	error = abs(heading - deg);
+	while(error > 5) {
+		error = abs(heading - deg); //(-) means you are too far left
+		turnPower = BOUND((int)(0.5*error), -100, 100);
+		motor[driveL] = -turnPower;
+		motor[driveR] = turnPower;
+	}
+	motor[driveL] = motor[driveR] = 0;
 }
 
 void selectMode() {
@@ -104,53 +140,90 @@ void selectMode() {
 	nxtDisplayCenteredBigTextLine(2, ";)");
 }
 
+void driveBackwards(int t) {
+	motor[driveL] = motor[driveR] = -100;
+	wait1Msec(t);
+	motor[driveL] = motor[driveR] = 0;
+}
+
+void driveForwards(int t) {
+	motor[driveL] = motor[driveR] = 100;
+	wait1Msec(t);
+	motor[driveL] = motor[driveR] = 0;
+}
+
 void turnOntoRamp() {
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
 	wait1Msec(1000);
 	if(leftSide) {
-		while(abs(nMotorEncoder[driveR]) <= encoderTurnAmount) {
-			if(abs(nMotorEncoder[driveR]) < initialTurnAmount) {
-				if(retraceSteps) {
-					motor[driveL] = -slowDrive;
-					motor[driveR] = -fastDrive;
-				} else {
-					motor[driveL] = slowDrive;
-					motor[driveR] = fastDrive;
-				}
-			} else {
-				if(retraceSteps) {
-					motor[driveL] = reverseDrive;
-					motor[driveR] = -fastDrive;
-				} else {
-					motor[driveL] = -reverseDrive;
-					motor[driveR] = fastDrive;
-				}
-			}
+		if(retraceSteps) {
+			turnDegrees(-90);
+			driveForwards(600);
+			turnDegrees(90);
+		} else {
+			turnDegrees(-90);
+			driveForwards(600);
+			turnDegrees(-90);
 		}
-		motor[driveL] = motor[driveR] = 0;
 	} else {
-		while(abs(nMotorEncoder[driveL]) <= encoderTurnAmount) {
-			if(abs(nMotorEncoder[driveL]) < initialTurnAmount) {
-				if(retraceSteps) {
-					motor[driveR] = -slowDrive;
-					motor[driveL] = -fastDrive;
-				} else {
-					motor[driveR] = slowDrive;
-					motor[driveL] = fastDrive;
-				}
-			} else {
-				if(retraceSteps) {
-					motor[driveR] = reverseDrive;
-					motor[driveL] = -fastDrive;
-				} else {
-					motor[driveR] = -reverseDrive;
-					motor[driveL] = fastDrive;
-				}
-			}
+		if(retraceSteps) {
+			turnDegrees(-90);
+			driveForwards(600);
+			turnDegrees(-90);
+		} else {
+			turnDegrees(-90);
+			driveForwards(600);
+			turnDegrees(90);
 		}
-		motor[driveL] = motor[driveR] = 0;
 	}
+
+	//if(leftSide) {
+	//	while(abs(nMotorEncoder[driveR]) <= encoderTurnAmount) {
+	//		if(abs(nMotorEncoder[driveR]) < initialTurnAmount) {
+	//			if(retraceSteps) {
+	//				motor[driveL] = -slowDrive;
+	//				motor[driveR] = -fastDrive;
+	//			} else {
+	//				motor[driveL] = slowDrive;
+	//				motor[driveR] = fastDrive;
+	//			}
+	//		} else {
+	//			if(retraceSteps) {
+	//				motor[driveL] = reverseDrive;
+	//				motor[driveR] = -fastDrive;
+	//			} else {
+	//				motor[driveL] = -reverseDrive;
+	//				motor[driveR] = fastDrive;
+	//			}
+	//		}
+	//	}
+	//	motor[driveL] = motor[driveR] = 0;
+	//} else {
+	//	while(abs(nMotorEncoder[driveL]) <= encoderTurnAmount) {
+	//		if(abs(nMotorEncoder[driveL]) < initialTurnAmount) {
+	//			if(retraceSteps) {
+	//				motor[driveR] = -slowDrive;
+	//				motor[driveL] = -fastDrive;
+	//			} else {
+	//				motor[driveR] = slowDrive;
+	//				motor[driveL] = fastDrive;
+	//			}
+	//		} else {
+	//			if(retraceSteps) {
+	//				motor[driveR] = reverseDrive;
+	//				motor[driveL] = -fastDrive;
+	//			} else {
+	//				motor[driveR] = -reverseDrive;
+	//				motor[driveL] = fastDrive;
+	//			}
+	//		}
+	//	}
+		//motor[driveL] = motor[driveR] = 0;
+
+
+
+	//Drive up onto the ramp!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
 	wait1Msec(1000);
