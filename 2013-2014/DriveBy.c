@@ -49,13 +49,14 @@ float heading = 0.0;
 float initialHeading = 0.0;
 float error;
 float turnPower;
+
 //-----------------------------------------Encoder / Other constants
+int reversedDriveLength = 200;
+int encoderRampDistance = 1800;
 const int sensorTrigger = 70;
 const int encoderTurnAmount = 4600;
 const int initialTurnAmount = encoderTurnAmount / 4.0; //How long the initial phase of turning is
 const int driveLength = 4600;
-const int reversedDriveLength = 200;
-const int encoderRampDistance = 1800;
 const int slowDrive = 5; //Value for the inside motor when turning onto ramp during initial phase
 const int fastDrive = 100; //Value for the outside motor when turning onto ramp during initial phase
 const int reverseDrive = -10;
@@ -106,6 +107,8 @@ void turnDegrees(int deg) {
 		turnPower = 40 * (error/abs(error));
 		if(leftSide && !retraceSteps) {
 			turnPower = 60 * (error/abs(error));
+		} else if (!leftSide && !retraceSteps) {
+			turnPower = 50 * (error/abs(error));
 		}
 		motor[driveL] = -turnPower;
 		motor[driveR] = turnPower;
@@ -162,21 +165,21 @@ void turnOntoRamp() {
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
 	wait1Msec(1000);
-	if(leftSide) {
+	if(leftSide) { //FORWARDS
 		if(retraceSteps) {
 			turnDegrees(-100);
 			driveForwards(700);
 			turnDegrees(-90);
 		} else {
-			turnDegrees(-55);
+			turnDegrees(-75);
 			driveForwards(700);
-			turnDegrees(55);
+			turnDegrees(75);
 		}
-	} else {
+	} else { //BACKWARDS
 		if(retraceSteps) {
-			turnDegrees(-100);
+			turnDegrees(-85);
 			driveForwards(700);
-			turnDegrees(90);
+			turnDegrees(85);
 		} else {
 			turnDegrees(-100);
 			driveForwards(700);
@@ -233,9 +236,12 @@ void turnOntoRamp() {
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
 	wait1Msec(1000);
+	if(leftSide && !retraceSteps) {
+		encoderRampDistance += 100;
+	}
 	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 < encoderRampDistance) {
 		if(retraceSteps) {
-			motor[driveL] = motor[driveR] = 80;
+			motor[driveL] = motor[driveR] = -80;
 		} else {
 			motor[driveL] = motor[driveR] = -80;
 		}
@@ -266,16 +272,19 @@ void driveBy() {
 void driveToEnd() {
 	if(!retraceSteps) {
 		if(leftSide) {
-			while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength - 500) { //Drive to end of wall
+			while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength - 650) { //Drive to end of wall
 				motor[driveL] = motor[driveR] = 25;
 			}
 		} else {
-			while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength) { //Drive to end of wall
+			while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= driveLength - 100) { //Drive to end of wall
 				motor[driveL] = motor[driveR] = -25;
 			}
 		}
 	} else {
-		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 >= reversedDriveLength) { //Drive backwards
+		reversedDriveLength = BOUND(((abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2) - 400, 0, driveLength);
+		nMotorEncoder[driveL] = 0;
+		nMotorEncoder[driveR] = 0;
+		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2 <= reversedDriveLength) { //Drive back to start
 			if(leftSide) {
 				motor[driveL] = motor[driveR] = -25;
 			} else {
