@@ -23,7 +23,16 @@
 #include "hitechnic-colour-v1.h"
 #include "JoystickDriver.c"  //Include file to "handle" the Bluetooth messages.
 
-int driveToLineLength = 2000;
+
+//Encoder values
+int driveToLineLength = 500;
+int driveToLineLengthOffset = 300;
+int nudgeAmount = 400;
+int turnAmount = 3000;
+int rampAmount = 1000;
+
+
+float driveMult = 1.0;
 
 //Line Sensor variables
 int redL = 0;
@@ -38,6 +47,10 @@ int dir_left = 0;
 int S1_left, S2_left, S3_left, S4_left, S5_left = 0;
 tHTIRS2DSPMode _mode = DSP_1200;
 
+bool leftSide;
+bool retraceSteps;
+
+void selectMode();
 void driveToLine();
 void followLine();
 void driveToEnd();
@@ -61,6 +74,7 @@ task readSensors() {
 
 task main() {
 	disableDiagnosticsDisplay();
+	selectMode();
   initializeRobot();
   StartTask(readSensors);
   waitForStart();
@@ -73,23 +87,36 @@ task main() {
 void driveToLine() {
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
+	if(!leftSide) {
+		driveToLineLength += driveToLineLengthOffset;
+	}
 	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 <= driveToLineLength) {
-		motor[driveL] = motor[driveR] = 100;
+		if(leftSide) {
+			motor[driveL] = motor[driveR] = 100;
+		} else {
+			motor[driveL] = motor[driveR] = -100;
+		}
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
 
 void followLine() {
+	if(leftSide) {
+		driveMult = 1.0;
+	} else {
+		driveMult = -1.0;
+	}
+
 	while(S3_left < 70) {
 		if(leftOn() && rightOn()) {
-			motor[driveL] = motor[driveR] = 100;
+			motor[driveL] = motor[driveR] = driveMult * 100;
 		} else if(leftOn() || rightOn()) {
 			if(leftOn()) {
-				motor[driveR] = 50;
-				motor[driveL] = 0;
+				motor[driveR] = driveMult * 50;
+				motor[driveL] = driveMult * 0;
 			} else {
-				motor[driveL] = 50;
-				motor[driveR] = 0;
+				motor[driveL] = driveMult * 50;
+				motor[driveR] = driveMult * 0;
 			}
 		}
 	}
@@ -106,24 +133,77 @@ void score() {
 }
 
 void driveToEnd() {
+	if(retraceSteps) {
+		driveMult *= -1.0;
+	}
+
 	while(leftOn() || rightOn()) {
 		if(leftOn() && rightOn()) {
-			motor[driveL] = motor[driveR] = 100;
+			motor[driveL] = motor[driveR] = driveMult * 100;
 		}
 		if(leftOn() && !rightOn()) {
-			motor[driveL] = 0;
-			motor[driveR] = 50;
+			motor[driveL] = driveMult * 0;
+			motor[driveR] = driveMult * 50;
 		}
 		if(!leftOn() && rightOn()) {
-			motor[driveL] = 50;
-			motor[driveR] = 0;
+			motor[driveL] = driveMult * 50;
+			motor[driveR] = driveMult * 0;
 		}
 	}
 	motor[driveL] = motor[driveR] = 0;
 }
 
 void turnOntoRamp() {
-
+	nMotorEncoder[driveL] = 0;
+	nMotorEncoder[driveR] = 0;
+	if(leftSide && !retraceSteps) {
+		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < nudgeAmount) {
+			motor[driveL] = motor[driveR] = 100;
+		}
+	}
+	if(!leftSide && retraceSteps) {
+		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < nudgeAmount) {
+			motor[driveL] = motor[driveR] = 100;
+		}
+	}
+	nMotorEncoder[driveL] = 0;
+	nMotorEncoder[driveR] = 0;
+	wait1Msec(500);
+	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < turnAmount) {
+		if(leftSide && !retraceSteps) {
+			motor[driveL] = 10;
+			motor[driveR] = 80;
+		}
+		if(leftSide && retraceSteps) {
+			motor[driveL] = -10;
+			motor[driveR] = -80;
+		}
+		if(!leftSide && !retraceSteps) {
+			motor[driveL] = -10;
+			motor[driveR] = -80;
+		}
+		if(!leftSide && retraceSteps) {
+			motor[driveL] = 10;
+			motor[driveR] = 80;
+		}
+	}
+	nMotorEncoder[driveL] = 0;
+	nMotorEncoder[driveR] = 0;
+	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < rampAmount) {
+		if(leftSide && !retraceSteps) {
+			motor[driveL] = motor[driveR] = 100;
+		}
+		if(!leftSide && retraceSteps) {
+			motor[driveL] = motor[driveR] = 100;
+		}
+		if(leftSide && retraceSteps) {
+			motor[driveL] = motor[driveR] = -100;
+		}
+		if(!leftSide && !retraceSteps) {
+			motor[driveL] = motor[driveR] = -100;
+		}
+	}
+	motor[driveL] = motor[driveR] = 0;
 }
 
 void startSensors(tHTIRS2DSPMode mode) {
@@ -147,4 +227,38 @@ bool rightOn() {
 		return true;
 	}
 	return false;
+}
+
+void selectMode() {
+	eraseDisplay();
+	nxtDisplayCenteredTextLine(0, "Choose which way");
+	nxtDisplayCenteredTextLine(1, "to drive.");
+	while(nNxtButtonPressed != 3) {
+		if(nNxtButtonPressed == 1) { //Right arrow
+			leftSide = true;
+			nxtDisplayCenteredBigTextLine(3, "Forwards");
+		}
+		if(nNxtButtonPressed == 2) { //Left arrow
+			leftSide = false;
+			nxtDisplayCenteredBigTextLine(3, "Backwards");
+		}
+	}
+	eraseDisplay();
+	wait1Msec(500);
+	nxtDisplayCenteredTextLine(0, "Do you want to");
+	nxtDisplayCenteredTextLine(1, "retrace your steps?");
+	while(nNxtButtonPressed != 3) {
+		if(nNxtButtonPressed == 1) { //Right arrow
+			retraceSteps = true;
+			nxtDisplayCenteredBigTextLine(3, "YES");
+		}
+		if(nNxtButtonPressed == 2) { //Left arrow
+			retraceSteps = false;
+			nxtDisplayCenteredBigTextLine(3, "NO");
+		}
+	}
+	eraseDisplay();
+	nxtDisplayCenteredTextLine(1, "DONE");
+	nxtDisplayCenteredTextLine(2, "ily bby");
+	nxtDisplayCenteredTextLine(3, ";)");
 }
