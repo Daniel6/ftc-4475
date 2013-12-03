@@ -47,8 +47,8 @@ int dir_left = 0;
 int S1_left, S2_left, S3_left, S4_left, S5_left = 0;
 tHTIRS2DSPMode _mode = DSP_1200;
 
-bool leftSide;
-bool retraceSteps;
+bool leftSide = true;
+bool retraceSteps = false;
 
 void selectMode();
 void driveToLine();
@@ -66,20 +66,22 @@ void initializeRobot() {
 }
 
 task readSensors() {
-	dir_left = HTIRS2readACDir(irL);
-	HTIRS2readAllDCStrength(irL, S1_left, S2_left, S3_left, S4_left, S5_left);
-	HTCSreadRGB(lineL, redL, greenL, blueL);
-	HTCSreadRGB(lineR, redR, greenR, blueR);
+	while(true) {
+		dir_left = HTIRS2readACDir(irL);
+		HTIRS2readAllDCStrength(irL, S1_left, S2_left, S3_left, S4_left, S5_left);
+		HTCSreadRGB(lineL, redL, greenL, blueL);
+		HTCSreadRGB(lineR, redR, greenR, blueR);
+	}
 }
 
 task main() {
 	disableDiagnosticsDisplay();
-	selectMode();
+	//selectMode();
   initializeRobot();
   StartTask(readSensors);
   waitForStart();
-  wait1Msec(waitTime);
-  driveToLine();
+  //wait1Msec(waitTime);
+  //driveToLine();
   followLine();
   //driveToEnd();
   //turnOntoRamp();
@@ -108,17 +110,20 @@ void followLine() {
 		driveMult = -1.0;
 	}
 
-	while(S3_left < 70 && (leftOn() || rightOn()) ) {
+	while(S3_left < 70) {
 		if(leftOn() && rightOn()) {
-			motor[driveL] = motor[driveR] = driveMult * 100;
-		} else if(leftOn() || rightOn()) {
-			if(leftOn()) {
-				motor[driveR] = driveMult * 50;
-				motor[driveL] = driveMult * 0;
-			} else {
-				motor[driveL] = driveMult * 50;
-				motor[driveR] = driveMult * 0;
-			}
+			motor[driveL] = motor[driveR] = driveMult * 35;
+		}
+		if(leftOn() && !rightOn()) {
+			motor[driveR] = driveMult * 30;
+			motor[driveL] = driveMult * 0;
+		}
+		if(!leftOn() && rightOn()) {
+			motor[driveR] = driveMult * 0;
+			motor[driveL] = driveMult * 30;
+		}
+		if(!leftOn() && !rightOn()) {
+			break;
 		}
 	}
 
@@ -217,17 +222,19 @@ void startSensors(tHTIRS2DSPMode mode) {
 }
 
 bool leftOn() {
-	if(redL > 100 || blueL > 100) {
+	if(redL > 90 || blueL > 90) {
 		return true;
+	} else {
+		return false;
 	}
-	return false;
 }
 
 bool rightOn() {
-	if(redR > 100 || blueL > 100) {
+	if(redR > 90 || blueR > 90) {
 		return true;
+	} else {
+		return false;
 	}
-	return false;
 }
 
 void selectMode() {
