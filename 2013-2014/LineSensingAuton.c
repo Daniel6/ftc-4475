@@ -81,8 +81,8 @@ task main() {
   wait1Msec(waitTime);
   driveToLine();
   followLine();
-  driveToEnd();
-  turnOntoRamp();
+  //driveToEnd();
+  //turnOntoRamp();
 }
 
 void driveToLine() {
@@ -108,7 +108,7 @@ void followLine() {
 		driveMult = -1.0;
 	}
 
-	while(S3_left < 70) {
+	while(S3_left < 70 && (leftOn() || rightOn()) ) {
 		if(leftOn() && rightOn()) {
 			motor[driveL] = motor[driveR] = driveMult * 100;
 		} else if(leftOn() || rightOn()) {
