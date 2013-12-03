@@ -31,7 +31,7 @@ int nudgeAmount = 400;
 int turnAmount = 3000;
 int rampAmount = 1000;
 
-
+int waitTime = 0;
 float driveMult = 1.0;
 
 //Line Sensor variables
@@ -78,6 +78,7 @@ task main() {
   initializeRobot();
   StartTask(readSensors);
   waitForStart();
+  wait1Msec(waitTime);
   driveToLine();
   followLine();
   driveToEnd();
@@ -244,9 +245,9 @@ void selectMode() {
 		}
 	}
 	eraseDisplay();
-	wait1Msec(500);
 	nxtDisplayCenteredTextLine(0, "Do you want to");
 	nxtDisplayCenteredTextLine(1, "retrace your steps?");
+	wait1Msec(500);
 	while(nNxtButtonPressed != 3) {
 		if(nNxtButtonPressed == 1) { //Right arrow
 			retraceSteps = true;
@@ -258,7 +259,25 @@ void selectMode() {
 		}
 	}
 	eraseDisplay();
+	nxtDisplayCenteredTextLine(0, "How long do you");
+	nxtDisplayCenteredTextLine(1, "want to wait?");
+	nxtDisplayCenteredBigTextLine(2, "%d", waitTime);
+	wait1Msec(500);
+	while(nNxtButtonPressed != 3) {
+		nxtDisplayCenteredBigTextLine(2, "%dms", waitTime);
+		if(nNxtButtonPressed == 1) { //Right arrow
+			waitTime += 100;
+		}
+		if(nNxtButtonPressed == 2) { //Left arrow
+			waitTime -= 100;
+		}
+		if(waitTime < 0) {
+			waitTime = 0;
+		}
+		wait1Msec(100);
+	}
+	eraseDisplay();
 	nxtDisplayCenteredTextLine(1, "DONE");
-	nxtDisplayCenteredTextLine(2, "ily bby");
+	nxtDisplayCenteredTextLine(2, "dont forget to turn on the robot");
 	nxtDisplayCenteredTextLine(3, ";)");
 }
