@@ -25,10 +25,10 @@
 
 
 //Encoder values
-int driveToLineLength = 500;
+int driveToLineLength = 600;
 int driveToLineLengthOffset = 300;
-int nudgeAmount = 400;
-int turnAmount = 3000;
+int nudgeAmount = 100;
+int turnAmount = 5000;
 int rampAmount = 1000;
 
 int waitTime = 0;
@@ -81,10 +81,10 @@ task main() {
   StartTask(readSensors);
   waitForStart();
   //wait1Msec(waitTime);
-  //driveToLine();
+  driveToLine();
   followLine();
-  //driveToEnd();
-  //turnOntoRamp();
+  driveToEnd();
+  turnOntoRamp();
 }
 
 void driveToLine() {
@@ -123,7 +123,8 @@ void followLine() {
 			motor[driveL] = driveMult * 30;
 		}
 		if(!leftOn() && !rightOn()) {
-			break;
+			motor[driveL] = motor[driveR] = 0;
+			//break;
 		}
 	}
 
@@ -132,9 +133,9 @@ void followLine() {
 }
 
 void score() {
-	servo[autoArm] = 255;
-	wait10Msec(100);
 	servo[autoArm] = 10;
+	wait10Msec(100);
+	servo[autoArm] = 255;
 	wait10Msec(100);
 }
 
@@ -145,14 +146,14 @@ void driveToEnd() {
 
 	while(leftOn() || rightOn()) {
 		if(leftOn() && rightOn()) {
-			motor[driveL] = motor[driveR] = driveMult * 100;
+			motor[driveL] = motor[driveR] = driveMult * 35;
 		}
 		if(leftOn() && !rightOn()) {
 			motor[driveL] = driveMult * 0;
-			motor[driveR] = driveMult * 50;
+			motor[driveR] = driveMult * 30;
 		}
 		if(!leftOn() && rightOn()) {
-			motor[driveL] = driveMult * 50;
+			motor[driveL] = driveMult * 30;
 			motor[driveR] = driveMult * 0;
 		}
 	}
@@ -164,33 +165,34 @@ void turnOntoRamp() {
 	nMotorEncoder[driveR] = 0;
 	if(leftSide && !retraceSteps) {
 		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < nudgeAmount) {
-			motor[driveL] = motor[driveR] = 100;
+			motor[driveL] = motor[driveR] = 35;
 		}
 	}
 	if(!leftSide && retraceSteps) {
 		while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < nudgeAmount) {
-			motor[driveL] = motor[driveR] = 100;
+			motor[driveL] = motor[driveR] = 35;
 		}
 	}
+	motor[driveL] = motor[driveR] = 0;
 	nMotorEncoder[driveL] = 0;
 	nMotorEncoder[driveR] = 0;
 	wait1Msec(500);
 	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < turnAmount) {
 		if(leftSide && !retraceSteps) {
-			motor[driveL] = 10;
-			motor[driveR] = 80;
+			motor[driveL] = 2;
+			motor[driveR] = 100;
 		}
 		if(leftSide && retraceSteps) {
-			motor[driveL] = -10;
-			motor[driveR] = -80;
+			motor[driveL] = -2;
+			motor[driveR] = -100;
 		}
 		if(!leftSide && !retraceSteps) {
-			motor[driveL] = -10;
-			motor[driveR] = -80;
+			motor[driveL] = -2;
+			motor[driveR] = -100;
 		}
 		if(!leftSide && retraceSteps) {
-			motor[driveL] = 10;
-			motor[driveR] = 80;
+			motor[driveL] = 2;
+			motor[driveR] = 100;
 		}
 	}
 	nMotorEncoder[driveL] = 0;
