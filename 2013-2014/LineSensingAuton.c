@@ -29,7 +29,7 @@ const tMUXSensor lineR = msensor_S4_2;
 
 //Encoder values
 int driveToLineLength = 600;
-int driveToLineLengthOffset = 300;
+int driveToLineLengthOffset = 500;
 int turnAmount = 5000;
 int rampAmount = 1000;
 
@@ -101,12 +101,12 @@ task readGyro() {
 
 task main() {
 	disableDiagnosticsDisplay();
-	//selectMode();
+	selectMode();
   initializeRobot();
   StartTask(readSensors);
   StartTask(readGyro);
   waitForStart();
-  //wait1Msec(waitTime);
+  wait1Msec(waitTime);
   driveToLine();
   followLine();
   driveToEnd();
@@ -131,23 +131,38 @@ void driveToLine() {
 }
 
 void followLine() {
-	if(leftSide) {
-		driveMult = 1.0;
-	} else {
-		driveMult = -1.0;
+	if(!leftOn() && !rightOn()) {
+		while(!leftOn() && !rightOn()) {
+			motor[driveR] = 30;
+		}
 	}
+	motor[driveR] = 0;
 
 	while(S3_left < 70) {
 		if(leftOn() && rightOn()) {
-			motor[driveL] = motor[driveR] = driveMult * 25;
+			if(leftSide) {
+				motor[driveL] = motor[driveR] = 20;
+			} else {
+				motor[driveL] = motor[driveR] = -20;
+			}
 		}
 		if(leftOn() && !rightOn()) {
-			motor[driveR] = driveMult * 30;
-			motor[driveL] = driveMult * 0;
+			if(leftSide) {
+				motor[driveR] = 30;
+				motor[driveL] = 0;
+			} else {
+				motor[driveL] = -30;
+				motor[driveR] = 30;
+			}
 		}
 		if(!leftOn() && rightOn()) {
-			motor[driveR] = driveMult * 0;
-			motor[driveL] = driveMult * 30;
+			if(leftSide) {
+				motor[driveR] = 0;
+				motor[driveL] = 30;
+			} else {
+				motor[driveL] = 30;
+				motor[driveR] = -30;
+			}
 		}
 		if(!leftOn() && !rightOn()) {
 			motor[driveL] = motor[driveR] = 0;
@@ -156,10 +171,44 @@ void followLine() {
 	}
 
 	motor[driveL] = motor[driveR] = 0;
+	wait1Msec(100);
 	score();
 }
 
 void score() {
+	for(int i = 0; i < 630; i++) {
+		if(leftOn() && rightOn()) {
+			if(leftSide) {
+				motor[driveL] = motor[driveR] = 20;
+			} else {
+				motor[driveL] = motor[driveR] = -20;
+			}
+		}
+		if(leftOn() && !rightOn()) {
+			if(leftSide) {
+				motor[driveR] = 30;
+				motor[driveL] = 0;
+			} else {
+				motor[driveL] = -30;
+				motor[driveR] = 30;
+			}
+		}
+		if(!leftOn() && rightOn()) {
+			if(leftSide) {
+				motor[driveR] = 0;
+				motor[driveL] = 30;
+			} else {
+				motor[driveL] = 30;
+				motor[driveR] = -30;
+			}
+		}
+		if(!leftOn() && !rightOn()) {
+			motor[driveL] = motor[driveR] = 0;
+			//break;
+		}
+	}
+	motor[driveL] = motor[driveR] = 0;
+	wait1Msec(200);
 	servo[autoArm] = 10;
 	wait10Msec(100);
 	servo[autoArm] = 255;
@@ -173,15 +222,29 @@ void driveToEnd() {
 
 	while(leftOn() || rightOn()) {
 		if(leftOn() && rightOn()) {
-			motor[driveL] = motor[driveR] = driveMult * 35;
+			if(leftSide) {
+				motor[driveL] = motor[driveR] = 20;
+			} else {
+				motor[driveL] = motor[driveR] = -20;
+			}
 		}
 		if(leftOn() && !rightOn()) {
-			motor[driveL] = driveMult * 0;
-			motor[driveR] = driveMult * 30;
+			if(leftSide) {
+				motor[driveR] = 30;
+				motor[driveL] = 0;
+			} else {
+				motor[driveL] = -30;
+				motor[driveR] = 30;
+			}
 		}
 		if(!leftOn() && rightOn()) {
-			motor[driveL] = driveMult * 30;
-			motor[driveR] = driveMult * 0;
+			if(leftSide) {
+				motor[driveR] = 0;
+				motor[driveL] = 30;
+			} else {
+				motor[driveL] = 30;
+				motor[driveR] = -30;
+			}
 		}
 	}
 	motor[driveL] = motor[driveR] = 0;
@@ -203,24 +266,24 @@ void turnOntoRampWithGyro() {
 	if(leftSide) { //FORWARDS
 		if(retraceSteps) {
 			turnDegrees(85);
-			driveBackwards(1100);
+			driveBackwards(900);
 			turnDegrees(90);
 			driveBackwards(1500);
 		} else {
-			turnDegrees(-85);
-			driveBackwards(1100);
 			turnDegrees(85);
+			driveBackwards(900);
+			turnDegrees(-85);
 			driveBackwards(1500);
 		}
 	} else { //BACKWARDS
 		if(retraceSteps) {
 			turnDegrees(-85);
-			driveForwards(1100);
+			driveForwards(900);
 			turnDegrees(85);
 			driveBackwards(1500);
 		} else {
 			turnDegrees(85);
-			driveBackwards(1100);
+			driveBackwards(90);
 			turnDegrees(90);
 			driveBackwards(1500);
 		}
@@ -348,9 +411,9 @@ void selectMode() {
 
 void turnDegrees(int deg) {
 	heading = 0;
-	error = heading - deg;
+	error = heading + deg;
 	while(error > 5 || error < -5) {
-		error = heading - deg; //(-) means you are too far left
+		error = heading + deg; //(-) means you are too far left
 		//turnPower = BOUND((int)(error), -100, 100);
 		turnPower = 60 * (error/abs(error));
 		motor[driveL] = turnPower;
@@ -360,23 +423,13 @@ void turnDegrees(int deg) {
 }
 
 void driveBackwards(int t) {
-	motor[driveL] = motor[driveR] = 0;
-	wait1Msec(200);
-	nMotorEncoder[driveL] = 0;
-	nMotorEncoder[driveR] = 0;
-	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < t) {
-		motor[driveL] = motor[driveR] = -100;
-	}
+	motor[driveL] = motor[driveR] = -100;
+	wait1Msec(t);
 	motor[driveL] = motor[driveR] = 0;
 }
 
 void driveForwards(int t) {
-	motor[driveL] = motor[driveR] = 0;
-	wait1Msec(200);
-	nMotorEncoder[driveL] = 0;
-	nMotorEncoder[driveR] = 0;
-	while( (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR])) / 2.0 < t) {
-		motor[driveL] = motor[driveR] = 100;
-	}
+	motor[driveL] = motor[driveR] = 100;
+	wait1Msec(t);
 	motor[driveL] = motor[driveR] = 0;
 }
