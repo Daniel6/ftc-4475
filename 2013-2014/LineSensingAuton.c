@@ -29,7 +29,7 @@ const tMUXSensor lineR = msensor_S4_2;
 
 //Encoder values
 int driveToLineLength = 600;
-int driveToLineLengthOffset = 500;
+int driveToLineLengthOffset = 400;
 int turnAmount = 5000;
 int rampAmount = 1000;
 
@@ -56,6 +56,7 @@ float turnPower;
 
 bool leftSide = true;
 bool retraceSteps = false;
+bool driveFurtherOnRamp = false;
 
 void selectMode();
 void driveToLine();
@@ -151,8 +152,8 @@ void followLine() {
 				motor[driveR] = 30;
 				motor[driveL] = 0;
 			} else {
-				motor[driveL] = -30;
-				motor[driveR] = 30;
+				motor[driveL] = 30;
+				motor[driveR] = 0;
 			}
 		}
 		if(!leftOn() && rightOn()) {
@@ -160,8 +161,8 @@ void followLine() {
 				motor[driveR] = 0;
 				motor[driveL] = 30;
 			} else {
-				motor[driveL] = 30;
-				motor[driveR] = -30;
+				motor[driveL] = 0;
+				motor[driveR] = 30;
 			}
 		}
 		if(!leftOn() && !rightOn()) {
@@ -189,8 +190,8 @@ void score() {
 				motor[driveR] = 30;
 				motor[driveL] = 0;
 			} else {
-				motor[driveL] = -30;
-				motor[driveR] = 30;
+				motor[driveL] = 30;
+				motor[driveR] = 0;
 			}
 		}
 		if(!leftOn() && rightOn()) {
@@ -198,8 +199,8 @@ void score() {
 				motor[driveR] = 0;
 				motor[driveL] = 30;
 			} else {
-				motor[driveL] = 30;
-				motor[driveR] = -30;
+				motor[driveL] = 0;
+				motor[driveR] = 30;
 			}
 		}
 		if(!leftOn() && !rightOn()) {
@@ -233,8 +234,8 @@ void driveToEnd() {
 				motor[driveR] = 30;
 				motor[driveL] = 0;
 			} else {
-				motor[driveL] = -30;
-				motor[driveR] = 30;
+				motor[driveL] = 30;
+				motor[driveR] = 0;
 			}
 		}
 		if(!leftOn() && rightOn()) {
@@ -242,8 +243,8 @@ void driveToEnd() {
 				motor[driveR] = 0;
 				motor[driveL] = 30;
 			} else {
-				motor[driveL] = 30;
-				motor[driveR] = -30;
+				motor[driveL] = 0;
+				motor[driveR] = 30;
 			}
 		}
 	}
@@ -268,24 +269,40 @@ void turnOntoRampWithGyro() {
 			turnDegrees(85);
 			driveBackwards(900);
 			turnDegrees(90);
-			driveBackwards(1500);
+			if(driveFurtherOnRamp) {
+				driveBackwards(2100);
+			} else {
+				driveBackwards(1500);
+			}
 		} else {
 			turnDegrees(85);
 			driveBackwards(900);
 			turnDegrees(-85);
-			driveBackwards(1500);
+			if(driveFurtherOnRamp) {
+				driveBackwards(2100);
+			} else {
+				driveBackwards(1500);
+			}
 		}
 	} else { //BACKWARDS
 		if(retraceSteps) {
 			turnDegrees(-85);
 			driveForwards(900);
 			turnDegrees(85);
-			driveBackwards(1500);
+			if(driveFurtherOnRamp) {
+				driveBackwards(2100);
+			} else {
+				driveBackwards(1500);
+			}
 		} else {
 			turnDegrees(85);
 			driveBackwards(90);
 			turnDegrees(90);
-			driveBackwards(1500);
+			if(driveFurtherOnRamp) {
+				driveBackwards(2100);
+			} else {
+				driveBackwards(1500);
+			}
 		}
 	}
 }
@@ -358,33 +375,33 @@ bool rightOn() {
 }
 
 void selectMode() {
-	eraseDisplay();
-	nxtDisplayCenteredTextLine(0, "Choose which way");
-	nxtDisplayCenteredTextLine(1, "to drive.");
-	while(nNxtButtonPressed != 3) {
-		if(nNxtButtonPressed == 1) { //Right arrow
-			leftSide = true;
-			nxtDisplayCenteredBigTextLine(3, "Forwards");
-		}
-		if(nNxtButtonPressed == 2) { //Left arrow
-			leftSide = false;
-			nxtDisplayCenteredBigTextLine(3, "Backwards");
-		}
-	}
-	eraseDisplay();
-	nxtDisplayCenteredTextLine(0, "Do you want to");
-	nxtDisplayCenteredTextLine(1, "retrace your steps?");
-	wait1Msec(500);
-	while(nNxtButtonPressed != 3) {
-		if(nNxtButtonPressed == 1) { //Right arrow
-			retraceSteps = true;
-			nxtDisplayCenteredBigTextLine(3, "YES");
-		}
-		if(nNxtButtonPressed == 2) { //Left arrow
-			retraceSteps = false;
-			nxtDisplayCenteredBigTextLine(3, "NO");
-		}
-	}
+	//eraseDisplay();
+	//nxtDisplayCenteredTextLine(0, "Choose which way");
+	//nxtDisplayCenteredTextLine(1, "to drive.");
+	//while(nNxtButtonPressed != 3) {
+	//	if(nNxtButtonPressed == 1) { //Right arrow
+	//		leftSide = true;
+	//		nxtDisplayCenteredBigTextLine(3, "Forwards");
+	//	}
+	//	if(nNxtButtonPressed == 2) { //Left arrow
+	//		leftSide = false;
+	//		nxtDisplayCenteredBigTextLine(3, "Backwards");
+	//	}
+	//}
+	//eraseDisplay();
+	//nxtDisplayCenteredTextLine(0, "Do you want to");
+	//nxtDisplayCenteredTextLine(1, "retrace your steps?");
+	//wait1Msec(500);
+	//while(nNxtButtonPressed != 3) {
+	//	if(nNxtButtonPressed == 1) { //Right arrow
+	//		retraceSteps = true;
+	//		nxtDisplayCenteredBigTextLine(3, "YES");
+	//	}
+	//	if(nNxtButtonPressed == 2) { //Left arrow
+	//		retraceSteps = false;
+	//		nxtDisplayCenteredBigTextLine(3, "NO");
+	//	}
+	//}
 	eraseDisplay();
 	nxtDisplayCenteredTextLine(0, "How long do you");
 	nxtDisplayCenteredTextLine(1, "want to wait?");
@@ -404,9 +421,24 @@ void selectMode() {
 		wait1Msec(100);
 	}
 	eraseDisplay();
+	nxtDisplayCenteredTextLine(0, "How Far do you want");
+	nxtDisplayCenteredTextLine(1, "to go on the ramp?");
+	while(nNxtButtonPressed != 3) {
+		if(nNxtButtonPressed == 1) { //Right arrow
+			nxtDisplayCenteredBigTextLine(2, "Further");
+			driveFurtherOnRamp = true;
+		}
+		if(nNxtButtonPressed == 2) { //Left arrow
+			nxtDisplayCenteredBigTextLine(2, "Normal");
+			driveFurtherOnRamp = false;
+		}
+		wait1Msec(100);
+	}
+	eraseDisplay();
 	nxtDisplayCenteredTextLine(1, "DONE");
-	nxtDisplayCenteredTextLine(2, "dont forget to turn on the robot");
-	nxtDisplayCenteredTextLine(3, ";)");
+	nxtDisplayCenteredTextLine(2, "dont forget to");
+	nxtDisplayCenteredTextLine(3, "turn on the robot");
+	nxtDisplayCenteredTextLine(4, ";)");
 }
 
 void turnDegrees(int deg) {
