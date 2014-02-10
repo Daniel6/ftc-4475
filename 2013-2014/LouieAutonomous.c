@@ -40,8 +40,14 @@ int redR = 0;
 int greenR = 0;
 int blueR = 0;
 
-const float kDriveDistance1 = 100;
+int waitTime = 0;
+const float kDriveDistance1 = 100; //The distance that we drive to when initially approaching the line/board.
+const float kDriveDistance2 = 100; //The distance that we drive to when going to get blocks.
+const float kDriveDistance3 = 1000; //The distance that we drive backwards to get on the ramp after getting blocks.
+const int kTurnAmount1 = 45; //The amount that we turn left when we go to get blocks after getting to the end of the line.
+const int kTurnAmount2 = -45; //The amount that we turn left after getting blocks to make our butt face the ramp.
 float heading = 0;
+bool scored = false;
 float gyroOffset = 0;
 
 task getHeading();
@@ -50,25 +56,38 @@ void startup();
 void calibrateGyroOffset();
 void getSettings();
 void driveToDistance(float dist);
+void encoderDriveToDistance(float dist, bool forwards);
 void driveOnHeading(float dir);
+void turnDegrees(int deg);
 void turnOntoLine();
 void driveBy();
 void pickupBlocks();
 void getOnRamp();
 void block();
+void score();
+void followLineBackwards();
+void followLineForwards();
+bool onTarget();
+bool frontOnLine();
+bool backOnLine();
+bool frontLeftOnLine();
+bool frontRightOnLine();
+bool backLeftOnLine();
+bool backRightOnLine();
 
 task main() {
 	StartTask(getHeading);
 	StartTask(readSensors);
-	startup();
-	getSettings();
-  waitForStart(); // Wait for the beginning of autonomous phase.
-	driveToDistance(kDriveDistance1);
-	turnOntoLine();
-	driveBy();
-	pickupBlocks(); //???
-	getOnRamp();
-	block();
+	startup(); //Initialize and calibrate
+	getSettings(); //Set Wait timer.
+  waitForStart(); //Wait for the beginning of autonomous phase.
+  wait10Msec(waitTime); //Do the wait that you set in getSettings();
+	driveToDistance(kDriveDistance1); //Drive until front sensor is on line
+	turnOntoLine(); //Turn on center until both sensors on line
+	driveBy(); //Drive backwards, then drive along whole line, scoring, then move to the end of the line
+	pickupBlocks(); //Drive to the corner and pick up blocks?
+	getOnRamp(); //Drive backwards up onto the ramp
+	block(); //Try to block other team from getting on the ramp too.
 }
 
 task readSensors() {
@@ -112,20 +131,28 @@ void calibrateGyroOffset() {
 	gyroOffset = accGyroVal / 10.0; //Take average gyro reading over 1 seconds w/ 10 samples
 }
 
-void turnOntoLine() {
-
+void turnOntoLine() { //Turn on center until both front sensors and back sensors are on the line
+	while(!frontOnLine() && !backOnLine()) {
+		motor[driveL] = 100;
+		motor[driveR] = -100;
+	}
+	motor[driveL] = motor[driveR] = 0;
 }
 
 void driveBy() {
-
+	followLineBackwards();
+	followLineForwards();
 }
 
 void pickupBlocks() {
-
+	motor[intake] = 100;
+	turnDegrees(heading - kTurnAmount1); //Turn to face the blocks
+	driveToDistance(kDriveDistance2); //Drive to the blocks
 }
 
 void getOnRamp() {
-
+	turnDegrees(heading - kTurnAmount2); //Turn so butt is facing the ramp
+	encoderDriveToDistance(kDriveDistance3, false);
 }
 
 void block() {
@@ -133,7 +160,28 @@ void block() {
 }
 
 void getSettings() {
+	disableDiagnosticsDisplay();
+	eraseDisplay();
+	nxtDisplayCenteredTextLine(0, "Delay Time:");
+	while (nNxtButtonPressed != 3) {
+		if(nNxtButtonPressed == 1) { //Right arrow
+			waitTime += 1000;
+		}
+		if(nNxtButtonPressed == 2) { //Left arrow
+			waitTime -= 1000;
+		}
+		nxtDisplayCenteredTextLine(1, "%i ms", waitTime);
+		wait10Msec(200);
+	}
+}
 
+void turnDegrees(int deg) {
+	while (abs(heading - deg) > 5) {
+		float err = heading - deg; //Neg err means we need to turn right
+		motor[driveL] = err * -2.0;
+		motor[driveR] = err * 2.0;
+	}
+	motor[driveL] = motor[driveR] = 0;
 }
 
 void driveToDistance(float dist) {
@@ -144,8 +192,97 @@ void driveToDistance(float dist) {
 	motor[driveL] = motor[driveR] = 0;
 }
 
+void encoderDriveToDistance(float dist, bool forwards) { //Pass distance and direction. True means drive forwards, false means drive backwards.
+	while (abs(nMotorEncoder[driveL]) + abs(nMotorEncoder[driveR]) < dist*2) {
+		if (forwards) {
+			motor[driveL] = motor[driveR] = 100;
+		} else {
+			motor[driveL] = motor[driveR] = -100;
+		}
+	}
+	motor[driveL] = motor[driveR] = 0;
+}
+
 void driveOnHeading(float dir) {
 	float err = heading - dir; //Neg err means we need to turn right
 	motor[driveL] = 90 - err;  //Pos err means we need to turn left
 	motor[driveR] = 90 + err;
+}
+
+bool frontOnLine() {
+	return frontLeftOnLine() && frontRightOnLine();
+}
+
+bool frontLeftOnLine() {
+
+}
+
+bool frontRightOnLine() {
+
+}
+
+bool backOnLine() {
+	return backLeftOnLine() && backRightOnLine();
+}
+
+bool backLeftOnLine() {
+
+}
+
+bool backRightOnLine() {
+
+}
+
+void followLineBackwards() {
+	while (backLeftOnLine() || backRightOnLine()) {
+		if (backLeftOnLine() && backRightOnLine()) {
+			motor[driveL] = motor[driveR] = -100;
+		} else if (backLeftOnLine()) {
+			motor[driveL] = 0;
+			motor[driveR] = -100;
+		} else if (backRightOnLine()) {
+			motor[driveL] = -100;
+			motor[driveR] = 0;
+		}	else {
+			motor[driveL] = motor[driveR] = 0;
+		}
+	}
+	motor[driveL] = motor[driveR] = 0;
+}
+
+void followLineForwards() {
+	while (frontLeftOnLine() || frontRightOnLine()) {
+		if (onTarget() && !scored) {
+			motor[driveL] = motor[driveR] = 0;
+			score();
+		}
+		if (frontLeftOnLine() && frontRightOnLine()) {
+			motor[driveL] = motor[driveR] = 100;
+		} else if (frontLeftOnLine()) {
+			motor[driveL] = 100;
+			motor[driveR] = 0;
+		} else if (frontRightOnLine()) {
+			motor[driveL] = 0;
+			motor[driveR] = 100;
+		}	else {
+			motor[driveL] = motor[driveR] = 0;
+		}
+	}
+	motor[driveL] = motor[driveR] = 0;
+}
+
+bool onTarget() {
+	if (S3_left > 70) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void score() {
+	servo[autoArm] = 255;
+	scored = true;
+	wait1Msec(500);
+	servo[autoArm] = 10;
+	wait1Msec(100);
 }
